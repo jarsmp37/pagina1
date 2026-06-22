@@ -1,0 +1,857 @@
+/* --- VARIABLES Y SISTEMA DE DISEÑO --- */
+:root {
+    /* Paleta de Colores Pastel Armoniosos */
+    --bg-base: #f9f6f0;         /* Crema muy suave de fondo */
+    --bg-card: #ffffff;         /* Blanco puro para tarjetas */
+    --bg-card-alt: #fcf8f2;     /* Crema claro alternativo */
+    
+    --text-primary: #3d312a;    /* Marrón café oscuro (alto contraste y legibilidad) */
+    --text-secondary: #705f55;  /* Marrón medio para textos secundarios */
+    --text-muted: #9c897d;       /* Marrón claro apagado */
+    
+    /* Tonos pastel de acento */
+    --pastel-rose: #ffb5a7;      /* Rosa pastel */
+    --pastel-peach: #fcd5ce;     /* Durazno pastel */
+    --pastel-apricot: #ffd7ba;   /* Melocotón pastel */
+    --pastel-butter: #ffe5b4;    /* Amarillo mantequilla */
+    --pastel-mint: #d8f3dc;      /* Verde menta claro */
+    --mint-dark: #2d6a4f;        /* Verde menta oscuro para texto legible */
+    
+    /* Colores dinámicos de temperatura */
+    --temp-hot: #ff6b6b;         /* Rojo pastel caliente */
+    --temp-warm: #ffd166;        /* Amarillo cálido */
+    --temp-cold: #a2d2ff;        /* Azul pastel frío */
+    
+    /* Bordes y Sombras */
+    --border-color: #f1e9df;
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 8px;
+    --shadow-soft: 0 12px 30px rgba(74, 63, 53, 0.05);
+    --shadow-hover: 0 20px 40px rgba(74, 63, 53, 0.1);
+    --shadow-inset: inset 0 2px 4px rgba(74, 63, 53, 0.05);
+    
+    /* Transiciones estándar */
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- ESTILOS GENERALES Y RESET --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2, h3, h4, .reading-num, .slider-value {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+}
+
+/* Partículas ambientales de fondo */
+#ambient-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+}
+
+/* --- HEADER --- */
+.main-header {
+    background-color: var(--bg-card);
+    border-bottom: 2px solid var(--border-color);
+    padding: 1.25rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(74, 63, 53, 0.02);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pizza-icon {
+    font-size: 2.5rem;
+    display: inline-block;
+    animation: rotatePulse 4s infinite ease-in-out;
+}
+
+.logo-area h1 {
+    font-size: 1.75rem;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.tagline {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Navegación por pestañas */
+.tab-navigation {
+    display: flex;
+    background-color: var(--bg-base);
+    padding: 0.35rem;
+    border-radius: var(--radius-md);
+    gap: 0.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.nav-btn {
+    border: none;
+    background: none;
+    padding: 0.75rem 1.25rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: calc(var(--radius-md) - 4px);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition-fast);
+}
+
+.nav-btn:hover {
+    color: var(--text-primary);
+    background-color: rgba(252, 213, 206, 0.3); /* Rosa suave con opacidad */
+}
+
+.nav-btn.active {
+    color: var(--text-primary);
+    background-color: var(--bg-card);
+    box-shadow: 0 4px 10px rgba(74, 63, 53, 0.05);
+}
+
+/* --- MAIN CONTENT CONTAINER --- */
+.content-container {
+    max-width: 1250px;
+    width: 100%;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    flex-grow: 1;
+    position: relative;
+    z-index: 1;
+}
+
+/* Control de visibilidad de pestañas */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* --- PANEL CARD (Estilo de tarjetas generales) --- */
+.panel-card {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
+    padding: 2rem;
+    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+
+.panel-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    margin-bottom: 1.5rem;
+}
+
+.card-header h2 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.card-header p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* --- DISEÑO DE LA SIMULACIÓN (GRID) --- */
+.grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Responsive grid */
+@media (max-width: 968px) {
+    .grid-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+/* --- CONTROLES Y DESLIZADORES --- */
+.slider-group {
+    margin-bottom: 1.5rem;
+}
+
+.slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.slider-header label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.slider-value {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    background-color: var(--pastel-apricot);
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sm);
+    min-width: 60px;
+    text-align: center;
+}
+
+.slider-desc {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Personalización del input slider */
+.custom-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border-color);
+    outline: none;
+    transition: var(--transition-fast);
+}
+
+.custom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--pastel-rose);
+    border: 3px solid var(--bg-card);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(74, 63, 53, 0.2);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+}
+
+.custom-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: #ff9b85; /* Tono rosa más vivo */
+}
+
+/* Colores específicos para sliders */
+#temp-ambiente + .slider-desc {
+    color: var(--text-muted);
+}
+#temp-ambiente::-webkit-slider-thumb {
+    background: var(--pastel-apricot);
+}
+#temp-ambiente::-webkit-slider-thumb:hover {
+    background: #ffbe86;
+}
+
+#const-k::-webkit-slider-thumb {
+    background: var(--pastel-butter);
+}
+#const-k::-webkit-slider-thumb:hover {
+    background: #ffd166;
+}
+
+/* --- BOTONES --- */
+.sim-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    flex: 1;
+    border: none;
+    padding: 0.9rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition-fast), transform var(--transition-fast);
+    box-shadow: 0 4px 12px rgba(74, 63, 53, 0.05);
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn-primary {
+    background-color: var(--pastel-rose);
+    color: var(--text-primary);
+}
+
+.btn-primary:hover {
+    background-color: #ff9b85;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 148, 126, 0.2);
+}
+
+.btn-secondary {
+    background-color: var(--bg-base);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+/* Selector de Velocidad */
+.speed-selector {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.speed-btns {
+    display: flex;
+    background-color: var(--bg-base);
+    padding: 0.2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.speed-btn {
+    border: none;
+    background: none;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+    border-radius: calc(var(--radius-sm) - 2px);
+    transition: var(--transition-fast);
+}
+
+.speed-btn.active {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: 0 2px 5px rgba(74, 63, 53, 0.05);
+}
+
+/* --- TARJETAS DE LECTURA NUMÉRICA --- */
+.live-readings {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.reading-card {
+    padding: 1rem 0.5rem;
+    border-radius: var(--radius-md);
+    text-align: center;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: transform var(--transition-fast);
+}
+
+.reading-card:hover {
+    transform: scale(1.03);
+}
+
+.reading-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.reading-num {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+/* Colores de fondo de lecturas */
+.hot-bg { background-color: rgba(255, 181, 167, 0.2); } /* Rosa suave */
+.time-bg { background-color: rgba(255, 229, 180, 0.25); } /* Amarillo suave */
+.diff-bg { background-color: rgba(216, 243, 220, 0.3); } /* Menta suave */
+
+
+/* --- PANEL VISUAL: PIZZA Y CANVAS --- */
+.visual-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.pizza-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.status-badge {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    background-color: var(--pastel-rose);
+    color: var(--text-primary);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: var(--transition-normal);
+}
+
+.pizza-viewport {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 320px;
+    margin: 1.5rem auto 0.5rem auto;
+    border-radius: 50%;
+    background-color: var(--bg-card-alt);
+    border: 2px dashed var(--border-color);
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible; /* Permitir que el vapor flote ligeramente fuera */
+}
+
+/* Canvas superpuesto */
+#steam-canvas {
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    width: calc(100% + 40px);
+    height: calc(100% + 40px);
+    pointer-events: auto; /* Para detectar movimiento del mouse */
+    z-index: 5;
+    border-radius: 50%;
+}
+
+#pizza-svg {
+    position: relative;
+    z-index: 2;
+    transition: transform var(--transition-normal);
+}
+
+.pizza-viewport:hover #pizza-svg {
+    transform: scale(1.02);
+}
+
+/* Brillo Térmico overlay */
+.glow-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    z-index: 3;
+    pointer-events: none;
+    box-shadow: inset 0 0 40px rgba(255, 107, 107, 0);
+    transition: box-shadow var(--transition-slow);
+}
+
+/* --- PANEL GRÁFICO (CHART) --- */
+.chart-card {
+    flex-grow: 1;
+}
+
+.chart-viewport {
+    width: 100%;
+    height: 250px;
+    margin-top: 1rem;
+    position: relative;
+}
+
+
+/* --- SECCIÓN: MODELO MATEMÁTICO --- */
+.math-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 968px) {
+    .math-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.theory-body {
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.theory-body p {
+    margin-bottom: 1rem;
+}
+
+.math-box {
+    background-color: var(--bg-card-alt);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    box-shadow: var(--shadow-inset);
+    text-align: center;
+}
+
+.variables-list {
+    list-style: none;
+    margin: 1rem 0 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.variables-list li {
+    position: relative;
+    padding-left: 1.75rem;
+}
+
+.variables-list li::before {
+    content: "🍕";
+    position: absolute;
+    left: 0;
+    top: 2px;
+    font-size: 0.95rem;
+}
+
+/* Tarjetas de pasos de derivación */
+.step-card {
+    display: flex;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.25rem;
+    transition: var(--transition-normal);
+}
+
+.step-card:hover {
+    border-color: var(--pastel-peach);
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(74, 63, 53, 0.03);
+}
+
+.step-num {
+    background-color: var(--pastel-rose);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(255, 181, 167, 0.3);
+}
+
+.step-desc {
+    flex-grow: 1;
+    overflow-x: auto;
+}
+
+.step-desc strong {
+    display: block;
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.finish-step {
+    background-color: rgba(216, 243, 220, 0.2);
+    border-color: var(--pastel-mint);
+}
+
+.finish-step .step-num {
+    background-color: var(--pastel-mint);
+    box-shadow: 0 2px 5px rgba(216, 243, 220, 0.5);
+}
+
+.final-eq-box {
+    margin-top: 1rem;
+    background-color: var(--bg-card);
+    border: 2px solid var(--pastel-mint);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(216, 243, 220, 0.15);
+}
+
+/* --- CALCULADORA MATEMÁTICA --- */
+.calc-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.calc-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.input-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.input-field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.num-input {
+    border: 2px solid var(--border-color);
+    background-color: var(--bg-base);
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    color: var(--text-primary);
+    outline: none;
+    transition: var(--transition-fast);
+}
+
+.num-input:focus {
+    border-color: var(--pastel-rose);
+    background-color: var(--bg-card);
+}
+
+.input-field span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.calc-result-box {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card-alt);
+    border: 2px dashed var(--border-color);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.calc-res-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.calc-res-val {
+    font-size: 2.25rem;
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+}
+
+/* Desglose de Cálculo */
+.calc-explanation {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+}
+
+.calc-explanation h3 {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.explain-list {
+    list-style-position: inside;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.explain-list li {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.explain-list li strong {
+    color: var(--text-primary);
+}
+
+.explain-list div {
+    margin-top: 0.35rem;
+    background-color: var(--bg-base);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+    font-size: 0.85rem;
+    border-left: 3px solid var(--pastel-rose);
+}
+
+/* Insights de Física */
+.physics-insights {
+    margin-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+}
+
+.physics-insights h3 {
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.insight-item {
+    background-color: var(--bg-card-alt);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.insight-item h4 {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.insight-item p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+
+/* --- FOOTER --- */
+.main-footer {
+    background-color: var(--bg-card);
+    border-top: 2px solid var(--border-color);
+    padding: 2rem;
+    text-align: center;
+    margin-top: auto;
+    z-index: 10;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.copyright {
+    color: var(--text-muted);
+}
+
+
+/* --- ANIMACIONES GENERALES --- */
+@keyframes rotatePulse {
+    0%, 100% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(10deg) scale(1.08);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

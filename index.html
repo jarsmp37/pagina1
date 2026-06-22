@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termodinámica de la Pizza - Ley de Enfriamiento de Newton</title>
+    
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX para renderizado matemático rápido -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
+    <!-- Chart.js para gráficos dinámicos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Efecto de partículas de fondo/vapor sutil general -->
+    <div id="ambient-particles"></div>
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <span class="pizza-icon">🍕</span>
+                <div>
+                    <h1>TermoPizza</h1>
+                    <p class="tagline">Aprende ecuaciones diferenciales enfriando una rebanada virtual</p>
+                </div>
+            </div>
+            <nav class="tab-navigation">
+                <button class="nav-btn active" data-target="simulacion-tab" id="btn-tab-simulacion">
+                    <span class="btn-icon">🎮</span> Simulación
+                </button>
+                <button class="nav-btn" data-target="modelo-tab" id="btn-tab-modelo">
+                    <span class="btn-icon">📐</span> Modelo Matemático
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <!-- Pestaña 1: Simulación Interactiva -->
+        <section id="simulacion-tab" class="tab-content active">
+            <div class="grid-layout">
+                <!-- Columna Izquierda: Parámetros y Controles -->
+                <div class="control-panel panel-card animate-fade-in">
+                    <div class="card-header">
+                        <h2>Controles Físicos</h2>
+                        <p>Ajusta las condiciones del entorno y de la pizza en tiempo real.</p>
+                    </div>
+
+                    <!-- Sliders -->
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <label for="temp-inicial">Temperatura Inicial de la Pizza ($T_{\text{inicial}}$):</label>
+                            <span class="slider-value" id="val-temp-inicial">90°C</span>
+                        </div>
+                        <input type="range" id="temp-inicial" min="40" max="150" value="90" step="5" class="custom-slider">
+                        <span class="slider-desc">La temperatura al salir del horno.</span>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <label for="temp-ambiente">Temperatura Ambiente ($T_{\text{ambiente}}$):</label>
+                            <span class="slider-value" id="val-temp-ambiente">20°C</span>
+                        </div>
+                        <input type="range" id="temp-ambiente" min="0" max="45" value="20" step="1" class="custom-slider">
+                        <span class="slider-desc">La temperatura de la cocina o habitación.</span>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-header">
+                            <label for="const-k">Constante de Enfriamiento ($k$):</label>
+                            <span class="slider-value" id="val-const-k">0.05 min⁻¹</span>
+                        </div>
+                        <input type="range" id="const-k" min="0.01" max="0.30" value="0.05" step="0.01" class="custom-slider">
+                        <span class="slider-desc">Representa qué tan rápido transfiere calor la pizza (depende del grosor, ingredientes, etc.).</span>
+                    </div>
+
+                    <!-- Botones de Control de Simulación -->
+                    <div class="sim-controls">
+                        <button id="btn-play-pause" class="btn btn-primary">
+                            <span id="play-icon">▶</span> <span id="play-text">Iniciar Tiempo</span>
+                        </button>
+                        <button id="btn-reset" class="btn btn-secondary">
+                            <span>🔄</span> Reiniciar
+                        </button>
+                    </div>
+
+                    <div class="speed-selector">
+                        <span>Velocidad:</span>
+                        <div class="speed-btns">
+                            <button class="speed-btn active" data-speed="1">1x</button>
+                            <button class="speed-btn" data-speed="5">5x</button>
+                            <button class="speed-btn" data-speed="15">15x</button>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Lecturas Numéricas -->
+                    <div class="live-readings">
+                        <div class="reading-card hot-bg">
+                            <span class="reading-label">Temperatura Pizza</span>
+                            <span class="reading-num" id="read-temp-pizza">90.0°C</span>
+                        </div>
+                        <div class="reading-card time-bg">
+                            <span class="reading-label">Tiempo Transcurrido</span>
+                            <span class="reading-num" id="read-time">0.0 min</span>
+                        </div>
+                        <div class="reading-card diff-bg">
+                            <span class="reading-label">Exceso térmico (T - Ta)</span>
+                            <span class="reading-num" id="read-diff">70.0°C</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Visualización Pizza y Gráfico -->
+                <div class="visual-panel">
+                    <!-- Panel Pizza Virtual -->
+                    <div class="pizza-card panel-card animate-fade-in" style="animation-delay: 0.1s;">
+                        <div class="card-header flex-header">
+                            <div>
+                                aria-label="Visualización de la pizza"
+                                <h2>Pizza Térmica</h2>
+                                <p>Mueve el mouse sobre la pizza para interactuar con el vapor.</p>
+                            </div>
+                            <span class="status-badge" id="pizza-status">Caliente 🔥</span>
+                        </div>
+
+                        <div class="pizza-viewport" id="pizza-viewport">
+                            <!-- Canvas para Partículas de Vapor -->
+                            <canvas id="steam-canvas"></canvas>
+
+                            <!-- SVG de la Pizza -->
+                            <svg id="pizza-svg" viewBox="0 0 300 300" width="100%" height="100%">
+                                <defs>
+                                    <!-- Filtro de sombra suave -->
+                                    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                                        <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#4a3f35" flood-opacity="0.15" />
+                                    </filter>
+                                    <!-- Gradiente para la corteza -->
+                                    <linearGradient id="crustGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#e6b89c" />
+                                        <stop offset="100%" stop-color="#c38d6b" />
+                                    </linearGradient>
+                                </defs>
+                                
+                                <g filter="url(#shadow)">
+                                    <!-- Corteza de la Pizza -->
+                                    <circle cx="150" cy="150" r="130" fill="url(#crustGrad)" stroke="#a16f4e" stroke-width="2" />
+                                    
+                                    <!-- Queso / Base (Cambiado por JS) -->
+                                    <circle id="pizza-cheese" cx="150" cy="150" r="114" fill="#ffb703" />
+
+                                    <!-- Detalles de Salsa y Queso Derretido (Sutiles manchas) -->
+                                    <path d="M 90,110 Q 110,80 150,90 Q 200,100 210,130 Q 230,170 190,200 Q 150,220 120,200 Q 80,180 90,110 Z" fill="#d90429" opacity="0.35" />
+                                    <path d="M 120,130 Q 150,110 180,140 Q 160,180 130,170 Q 100,160 120,130 Z" fill="#ffe066" opacity="0.4" />
+                                    
+                                    <!-- Peperoni 1 -->
+                                    <circle cx="100" cy="110" r="14" fill="#c1121f" stroke="#780000" stroke-width="1.5" />
+                                    <circle cx="97" cy="107" r="10" fill="#a4161a" opacity="0.8" />
+                                    <circle cx="104" cy="113" r="3" fill="#ffe066" opacity="0.5" />
+                                    
+                                    <!-- Peperoni 2 -->
+                                    <circle cx="200" cy="105" r="14" fill="#c1121f" stroke="#780000" stroke-width="1.5" />
+                                    <circle cx="197" cy="102" r="10" fill="#a4161a" opacity="0.8" />
+                                    <circle cx="203" cy="107" r="3" fill="#ffe066" opacity="0.5" />
+
+                                    <!-- Peperoni 3 -->
+                                    <circle cx="150" cy="200" r="14" fill="#c1121f" stroke="#780000" stroke-width="1.5" />
+                                    <circle cx="147" cy="197" r="10" fill="#a4161a" opacity="0.8" />
+                                    
+                                    <!-- Peperoni 4 -->
+                                    <circle cx="95" cy="175" r="14" fill="#c1121f" stroke="#780000" stroke-width="1.5" />
+                                    <circle cx="92" cy="172" r="10" fill="#a4161a" opacity="0.8" />
+
+                                    <!-- Peperoni 5 -->
+                                    <circle cx="205" cy="170" r="14" fill="#c1121f" stroke="#780000" stroke-width="1.5" />
+                                    <circle cx="202" cy="167" r="10" fill="#a4161a" opacity="0.8" />
+                                    
+                                    <!-- Hojas de Albahaca -->
+                                    <!-- Albahaca 1 -->
+                                    <path d="M 140,85 C 130,75 140,60 155,70 C 160,85 150,90 140,85 Z" fill="#52b788" stroke="#2d6a4f" stroke-width="1" />
+                                    <path d="M 148,77 L 143,82" stroke="#2d6a4f" stroke-width="0.8" />
+                                    <!-- Albahaca 2 -->
+                                    <path d="M 230,135 C 240,125 235,110 220,120 C 215,135 220,140 230,135 Z" fill="#52b788" stroke="#2d6a4f" stroke-width="1" />
+                                    
+                                    <!-- Albahaca 3 -->
+                                    <path d="M 115,215 C 105,210 110,195 125,200 C 130,215 125,220 115,215 Z" fill="#52b788" stroke="#2d6a4f" stroke-width="1" />
+                                </g>
+                            </svg>
+
+                            <!-- Superposición de brillo térmico dinámico -->
+                            <div id="thermal-glow" class="glow-effect"></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Gráfico -->
+                    <div class="chart-card panel-card animate-fade-in" style="animation-delay: 0.2s;">
+                        <div class="card-header">
+                            <h2>Curva de Enfriamiento</h2>
+                            <p>Evolución de la temperatura a lo largo del tiempo.</p>
+                        </div>
+                        <div class="chart-viewport">
+                            <canvas id="coolingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pestaña 2: Modelo Matemático -->
+        <section id="modelo-tab" class="tab-content">
+            <div class="math-layout">
+                <!-- Columna Izquierda: Teoría de la EDO -->
+                <div class="math-theory panel-card">
+                    <div class="card-header">
+                        <h2>La Ley de Enfriamiento de Newton</h2>
+                        <p>Fundamento físico y formulación mediante Ecuaciones Diferenciales Ordinarias (EDO).</p>
+                    </div>
+
+                    <div class="theory-body">
+                        <p>La **Ley de Enfriamiento de Newton** establece que la tasa de cambio de la temperatura de un cuerpo es directamente proporcional a la diferencia entre su propia temperatura y la del medio ambiente que lo rodea.</p>
+                        
+                        <div class="math-box">
+                            <!-- EDO Principal en LaTeX -->
+                            <div class="latex-eq">
+                                $$\frac{dT}{dt} = -k(T - T_{\text{ambiente}})$$
+                            </div>
+                        </div>
+
+                        <h3>Significado de las Variables:</h3>
+                        <ul class="variables-list">
+                            <li><strong>$T(t)$</strong>: Temperatura del cuerpo (la pizza) en cualquier instante de tiempo $t$ (°C).</li>
+                            <li><strong>$t$</strong>: Tiempo transcurrido (minutos).</li>
+                            <li><strong>$T_{\text{ambiente}}$</strong>: Temperatura del medio ambiente que rodea al objeto (°C).</li>
+                            <li><strong>$k$</strong>: Constante de proporcionalidad térmica (min⁻¹). Su signo negativo indica que la temperatura disminuye si el objeto está más caliente que su entorno.</li>
+                        </ul>
+
+                        <h3>Derivación y Solución Paso a Paso:</h3>
+                        
+                        <div class="step-card">
+                            <span class="step-num">1</span>
+                            <div class="step-desc">
+                                <strong>Separación de Variables:</strong> Reescribimos la ecuación diferencial separando todos los términos con $T$ en el lado izquierdo y los términos con $t$ en el derecho:
+                                $$\frac{dT}{T - T_{\text{ambiente}}} = -k \, dt$$
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <span class="step-num">2</span>
+                            <div class="step-desc">
+                                <strong>Integración:</strong> Integramos ambos lados respecto a sus respectivas variables:
+                                $$\int \frac{1}{T - T_{\text{ambiente}}} \, dT = \int -k \, dt$$
+                                $$\ln|T - T_{\text{ambiente}}| = -kt + C_0$$
+                                donde $C_0$ es la constante de integración.
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <span class="step-num">3</span>
+                            <div class="step-desc">
+                                <strong>Despeje Exponencial:</strong> Aplicamos la función exponencial $e^x$ en ambos lados para eliminar el logaritmo natural:
+                                $$|T - T_{\text{ambiente}}| = e^{-kt + C_0} = e^{C_0} \cdot e^{-kt}$$
+                                Definiendo una nueva constante constante general $C = \pm e^{C_0}$, podemos quitar el valor absoluto:
+                                $$T(t) - T_{\text{ambiente}} = C \cdot e^{-kt}$$
+                                $$T(t) = T_{\text{ambiente}} + C \cdot e^{-kt}$$
+                            </div>
+                        </div>
+
+                        <div class="step-card">
+                            <span class="step-num">4</span>
+                            <div class="step-desc">
+                                <strong>Condición Inicial:</strong> Usamos la temperatura de la pizza al tiempo cero, $T(0) = T_{\text{inicial}}$, para hallar el valor específico de $C$:
+                                $$T_{\text{inicial}} = T_{\text{ambiente}} + C \cdot e^{-k(0)}$$
+                                $$T_{\text{inicial}} = T_{\text{ambiente}} + C \implies C = T_{\text{inicial}} - T_{\text{ambiente}}$$
+                            </div>
+                        </div>
+
+                        <div class="step-card finish-step">
+                            <span class="step-num">5</span>
+                            <div class="step-desc">
+                                <strong>Solución Analítica Final:</strong> Sustituimos $C$ de vuelta en la ecuación del Paso 3. Esta es la función que predice con exactitud cómo se enfría nuestra pizza:
+                                <div class="final-eq-box">
+                                    $$T(t) = T_{\text{ambiente}} + (T_{\text{inicial}} - T_{\text{ambiente}}) \cdot e^{-k \cdot t}$$
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Calculadora Interactiva e Insights -->
+                <div class="math-calculator panel-card">
+                    <div class="card-header">
+                        <h2>Calculadora del Modelo</h2>
+                        <p>Evalúa la fórmula de forma interactiva y observa el desglose paso a paso del resultado.</p>
+                    </div>
+
+                    <div class="calc-inputs">
+                        <div class="calc-row">
+                            <div class="input-field">
+                                <label for="calc-t-init">Temp. Inicial ($T_i$):</label>
+                                <input type="number" id="calc-t-init" value="90" min="40" max="150" class="num-input">
+                                <span>°C</span>
+                            </div>
+                            <div class="input-field">
+                                <label for="calc-t-amb">Temp. Ambiente ($T_a$):</label>
+                                <input type="number" id="calc-t-amb" value="20" min="0" max="45" class="num-input">
+                                <span>°C</span>
+                            </div>
+                        </div>
+                        <div class="calc-row">
+                            <div class="input-field">
+                                <label for="calc-k">Constante ($k$):</label>
+                                <input type="number" id="calc-k" value="0.05" step="0.01" min="0.01" max="0.30" class="num-input">
+                                <span>min⁻¹</span>
+                            </div>
+                            <div class="input-field">
+                                <label for="calc-time">Tiempo evaluado ($t$):</label>
+                                <input type="number" id="calc-time" value="10" min="0" max="120" class="num-input">
+                                <span>minutos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="calc-result-box">
+                        <span class="calc-res-label">Temperatura Calculada:</span>
+                        <span class="calc-res-val" id="calc-result-temp">62.5°C</span>
+                    </div>
+
+                    <!-- Desglose Matemático Interactivo -->
+                    <div class="calc-explanation">
+                        <h3>Desglose del Cálculo:</h3>
+                        <div class="step-explanation-math">
+                            <ol class="explain-list">
+                                <li>
+                                    <strong>Calcular la diferencia térmica inicial:</strong>
+                                    <div id="math-explain-step-1"></div>
+                                </li>
+                                <li>
+                                    <strong>Calcular el factor de decaimiento exponencial ($e^{-kt}$):</strong>
+                                    <div id="math-explain-step-2"></div>
+                                </li>
+                                <li>
+                                    <strong>Sustituir en la fórmula general:</strong>
+                                    <div id="math-explain-step-3"></div>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Insights de Física y EDOs -->
+                    <div class="physics-insights">
+                        <h3>💡 Observaciones Didácticas</h3>
+                        <div class="insight-item">
+                            <h4>Asíntota Horizontal</h4>
+                            <p>A medida que el tiempo $t \to \infty$, el término exponencial $e^{-kt} \to 0$. Esto significa que $T(t) \to T_{\text{ambiente}}$. En términos prácticos, la pizza nunca estará más fría que la habitación.</p>
+                        </div>
+                        <div class="insight-item">
+                            <h4>¿Qué determina el valor de $k$?</h4>
+                            <p>El valor de $k$ depende de la transferencia de calor convectiva y de la masa de la pizza. Una pizza familiar grande tendrá un valor de $k$ más pequeño (se enfría más lento) que una pizza personal pequeña.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-container">
+            <p>Diseñado con fines educativos y de divulgación matemática. Ecuaciones Diferenciales Ordinarias.</p>
+            <p class="copyright">&copy; 2026 TermoPizza Interactiva. Hecho con HTML5, CSS3 y Vanilla JS.</p>
+        </div>
+    </footer>
+
+    <!-- Lógica de la aplicación -->
+    <script src="script.js"></script>
+</body>
+</html>
